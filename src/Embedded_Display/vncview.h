@@ -28,15 +28,16 @@
 #include "vncclientthread.h"
 
 #ifdef QTONLY
-    class KConfigGroup{};
+class KConfigGroup
+{
+};
 #else
-    #include "vnchostpreferences.h"
+#	include "vnchostpreferences.h"
 #endif
 
 #ifdef LIBSSH_FOUND
-    #include "vncsshtunnelthread.h"
+#	include "vncsshtunnelthread.h"
 #endif
-
 
 #include <QClipboard>
 #include <QMap>
@@ -47,79 +48,81 @@ extern "C" {
 
 class VncView: public RemoteView
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit VncView(QWidget *parent = nullptr, const QUrl &url = QUrl(), KConfigGroup configGroup = KConfigGroup());
-    ~VncView() override;
+	explicit VncView( QWidget     *parent	   = nullptr,
+			  const QUrl  &url	   = QUrl(),
+			  KConfigGroup configGroup = KConfigGroup() );
+	~VncView() override;
 
-    QSize framebufferSize() override;
-    QSize sizeHint() const override;
-    QSize minimumSizeHint() const override;
-    void startQuitting() override;
-    bool isQuitting() override;
-    bool start() override;
-    bool supportsScaling() const override;
-    bool supportsLocalCursor() const override;
-    bool supportsViewOnly() const override;
-    
+	QSize framebufferSize() override;
+	QSize sizeHint() const override;
+	QSize minimumSizeHint() const override;
+	void  startQuitting() override;
+	bool  isQuitting() override;
+	bool  start() override;
+	bool  supportsScaling() const override;
+	bool  supportsLocalCursor() const override;
+	bool  supportsViewOnly() const override;
+
 #ifndef QTONLY
-    HostPreferences* hostPreferences() override;
+	HostPreferences *hostPreferences() override;
 #endif
 
-    void setViewOnly(bool viewOnly) override;
-    void showDotCursor(DotCursorState state) override;
-    void enableScaling(bool scale) override;
+	void setViewOnly( bool viewOnly ) override;
+	void showDotCursor( DotCursorState state ) override;
+	void enableScaling( bool scale ) override;
 
-    void updateConfiguration() override;
+	void updateConfiguration() override;
 
 public Q_SLOTS:
-    void scaleResize(int w, int h) override;
+	void scaleResize( int w, int h ) override;
 
 protected:
-    void paintEvent(QPaintEvent *event) override;
-    bool event(QEvent *event) override;
-    void resizeEvent(QResizeEvent *event) override;
-    bool eventFilter(QObject *obj, QEvent *event) override;
+	void paintEvent( QPaintEvent *event ) override;
+	bool event( QEvent *event ) override;
+	void resizeEvent( QResizeEvent *event ) override;
+	bool eventFilter( QObject *obj, QEvent *event ) override;
 
 private:
-    VncClientThread vncThread;
-    QClipboard *m_clipboard;
-    bool m_initDone;
-    int m_buttonMask;
-    QMap<unsigned int, bool> m_mods;
-    bool m_quitFlag;
-    bool m_firstPasswordTry;
-    bool m_dontSendClipboard;
-    qreal m_horizontalFactor;
-    qreal m_verticalFactor;
+	VncClientThread		 vncThread;
+	QClipboard		*m_clipboard;
+	bool			 m_initDone;
+	int			 m_buttonMask;
+	QMap<unsigned int, bool> m_mods;
+	bool			 m_quitFlag;
+	bool			 m_firstPasswordTry;
+	bool			 m_dontSendClipboard;
+	qreal			 m_horizontalFactor;
+	qreal			 m_verticalFactor;
 #ifndef QTONLY
-    VncHostPreferences *m_hostPreferences;
+	VncHostPreferences *m_hostPreferences;
 #endif
-    QImage m_frame;
-    bool m_forceLocalCursor;
+	QImage m_frame;
+	bool   m_forceLocalCursor;
 #ifdef LIBSSH_FOUND
-    VncSshTunnelThread *m_sshTunnelThread;
+	VncSshTunnelThread *m_sshTunnelThread;
 
-    QString readWalletSshPassword();
-    void saveWalletSshPassword();
+	QString readWalletSshPassword();
+	void	saveWalletSshPassword();
 #endif
 
-    void keyEventHandler(QKeyEvent *e);
-    void unpressModifiers();
-    void wheelEventHandler(QWheelEvent *event);
-    void mouseEventHandler(QMouseEvent *event);
+	void keyEventHandler( QKeyEvent *e );
+	void unpressModifiers();
+	void wheelEventHandler( QWheelEvent *event );
+	void mouseEventHandler( QMouseEvent *event );
 
 private Q_SLOTS:
-    void updateImage(int x, int y, int w, int h);
-    void setCut(const QString &text);
-    void requestPassword(bool includingUsername);
+	void updateImage( int x, int y, int w, int h );
+	void setCut( const QString &text );
+	void requestPassword( bool includingUsername );
 #ifdef LIBSSH_FOUND
-    void sshRequestPassword(VncSshTunnelThread::PasswordRequestFlags flags);
+	void sshRequestPassword( VncSshTunnelThread::PasswordRequestFlags flags );
 #endif
-    void outputErrorMessage(const QString &message);
-    void sshErrorMessage(const QString &message);
-    void clipboardDataChanged();
+	void outputErrorMessage( const QString &message );
+	void sshErrorMessage( const QString &message );
+	void clipboardDataChanged();
 };
 
 #endif

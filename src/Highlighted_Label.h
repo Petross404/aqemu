@@ -23,16 +23,15 @@
 #include <QLabel>
 
 #ifndef HIGHLIGHTED_LABEL_H
-#define HIGHLIGHTED_LABEL_H
+#	define HIGHLIGHTED_LABEL_H
 
-class Highlighted_Label : public QLabel
+class Highlighted_Label: public QLabel
 {
-    Q_OBJECT
+	Q_OBJECT
 
-    public:
-        Highlighted_Label(QWidget*);
-        Highlighted_Label();
-
+public:
+	Highlighted_Label( QWidget* );
+	Highlighted_Label();
 };
 
-#endif // HIGHLIGHTED_LABEL_H
+#endif	  // HIGHLIGHTED_LABEL_H

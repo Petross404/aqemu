@@ -28,17 +28,15 @@
 
 class Inspect_QEMU_Arguments: public QDialog
 {
-
 	Q_OBJECT
-	
-	public:
-		Inspect_QEMU_Arguments( Virtual_Machine* vm, QWidget *parent = 0 );
-		~Inspect_QEMU_Arguments();
 
-    private slots:
-    private:
-		Ui::Inspect_QEMU_Arguments ui;
+public:
+	Inspect_QEMU_Arguments( Virtual_Machine* vm, QWidget* parent = 0 );
+	~Inspect_QEMU_Arguments();
+
+private slots:
+private:
+	Ui::Inspect_QEMU_Arguments ui;
 };
 
 #endif
-

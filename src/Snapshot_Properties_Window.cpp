@@ -20,8 +20,9 @@
 **
 ****************************************************************************/
 
-#include "Utils.h"
 #include "Snapshot_Properties_Window.h"
+
+#include "Utils.h"
 
 Snapshot_Properties_Window::Snapshot_Properties_Window( QWidget *parent )
 	: QDialog( parent )
@@ -49,16 +50,16 @@ void Snapshot_Properties_Window::Set_Snapshot_Description( const QString &desc )
 	ui.Edit_Description->setPlainText( desc );
 }
 
-void Snapshot_Properties_Window::done(int r)
+void Snapshot_Properties_Window::done( int r )
 {
-    if ( r == QDialog::Accepted )
-    {
-	    if( ui.Edit_Name->text().isEmpty() )
-	    {
-		    AQGraphic_Warning( tr("Warning"), tr("Snapshot name is empty!") );
-		    return;
-	    }
-    }
-    QDialog::done(r);
+	if ( r == QDialog::Accepted )
+	{
+		if ( ui.Edit_Name->text().isEmpty() )
+		{
+			AQGraphic_Warning( tr( "Warning" ),
+					   tr( "Snapshot name is empty!" ) );
+			return;
+		}
+	}
+	QDialog::done( r );
 }
-

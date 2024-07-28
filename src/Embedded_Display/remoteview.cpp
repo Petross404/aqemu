@@ -23,261 +23,228 @@
 ****************************************************************************/
 
 #include "remoteview.h"
-#include "krdc_debug.h"
 
-#include <QUrl>
 #include <QBitmap>
 #include <QStandardPaths>
+#include <QUrl>
 
-RemoteView::RemoteView(QWidget *parent)
-        : QWidget(parent),
-        m_status(Disconnected),
-        m_host(QString()),
-        m_port(0),
-        m_viewOnly(false),
-        m_grabAllKeys(false),
-        m_scale(false),
-        m_keyboardIsGrabbed(false),
+#include "krdc_debug.h"
+
+RemoteView::RemoteView( QWidget *parent )
+	: QWidget( parent )
+	, m_status( Disconnected )
+	, m_host( QString() )
+	, m_port( 0 )
+	, m_viewOnly( false )
+	, m_grabAllKeys( false )
+	, m_scale( false )
+	, m_keyboardIsGrabbed( false )
+	,
 #ifndef QTONLY
-        m_wallet(nullptr),
+	m_wallet( nullptr )
+	,
 #endif
-        m_dotCursorState(CursorOff)
+	m_dotCursorState( CursorOff )
 {
-    resize(0, 0);
+	resize( 0, 0 );
 }
 
 RemoteView::~RemoteView()
 {
 #ifndef QTONLY
-    delete m_wallet;
+	delete m_wallet;
 #endif
 }
 
-RemoteView::RemoteStatus RemoteView::status()
+RemoteView::RemoteStatus RemoteView::status() { return m_status; }
+
+void RemoteView::setStatus( RemoteView::RemoteStatus s )
 {
-    return m_status;
+	if ( m_status == s ) return;
+
+	if ( ( ( 1 + m_status ) != s ) && ( s != Disconnected ) )
+	{
+		// follow state transition rules
+
+		if ( s == Disconnecting )
+		{
+			if ( m_status == Disconnected ) return;
+		}
+		else
+		{
+			Q_ASSERT( ( (int)s ) >= 0 );
+			if ( m_status > s )
+			{
+				m_status = Disconnected;
+				emit statusChanged( Disconnected );
+			}
+			// smooth state transition
+			RemoteStatus origState = m_status;
+			for ( int i = origState; i < s; ++i )
+			{
+				m_status = (RemoteStatus)i;
+				emit statusChanged( (RemoteStatus)i );
+			}
+		}
+	}
+	m_status = s;
+	emit statusChanged( m_status );
 }
 
-void RemoteView::setStatus(RemoteView::RemoteStatus s)
+bool RemoteView::supportsScaling() const { return false; }
+
+bool RemoteView::supportsLocalCursor() const { return false; }
+
+bool RemoteView::supportsViewOnly() const { return false; }
+
+QString RemoteView::host() { return m_host; }
+
+QSize RemoteView::framebufferSize() { return QSize( 0, 0 ); }
+
+void RemoteView::startQuitting() {}
+
+bool RemoteView::isQuitting() { return false; }
+
+int RemoteView::port() { return m_port; }
+
+void RemoteView::updateConfiguration() {}
+
+void RemoteView::keyEvent( QKeyEvent * ) {}
+
+bool RemoteView::viewOnly() { return m_viewOnly; }
+
+void RemoteView::setViewOnly( bool viewOnly ) { m_viewOnly = viewOnly; }
+
+bool RemoteView::grabAllKeys() { return m_grabAllKeys; }
+
+void RemoteView::setGrabAllKeys( bool grabAllKeys )
 {
-    if (m_status == s)
-        return;
+	m_grabAllKeys = grabAllKeys;
 
-    if (((1+ m_status) != s) && (s != Disconnected)) {
-        // follow state transition rules
-
-        if (s == Disconnecting) {
-            if (m_status == Disconnected)
-                return;
-        } else {
-            Q_ASSERT(((int) s) >= 0);
-            if (m_status > s) {
-                m_status = Disconnected;
-                emit statusChanged(Disconnected);
-            }
-            // smooth state transition
-            RemoteStatus origState = m_status;
-            for (int i = origState; i < s; ++i) {
-                m_status = (RemoteStatus) i;
-                emit statusChanged((RemoteStatus) i);
-            }
-        }
-    }
-    m_status = s;
-    emit statusChanged(m_status);
+	if ( grabAllKeys )
+	{
+		m_keyboardIsGrabbed = true;
+		grabKeyboard();
+	}
+	else if ( m_keyboardIsGrabbed ) { releaseKeyboard(); }
 }
 
-bool RemoteView::supportsScaling() const
-{
-    return false;
-}
+QPixmap RemoteView::takeScreenshot() { return grab(); }
 
-bool RemoteView::supportsLocalCursor() const
-{
-    return false;
-}
-
-bool RemoteView::supportsViewOnly() const
-{
-    return false;
-}
-
-QString RemoteView::host()
-{
-    return m_host;
-}
-
-QSize RemoteView::framebufferSize()
-{
-    return QSize(0, 0);
-}
-
-void RemoteView::startQuitting()
-{
-}
-
-bool RemoteView::isQuitting()
-{
-    return false;
-}
-
-int RemoteView::port()
-{
-    return m_port;
-}
-
-void RemoteView::updateConfiguration()
-{
-}
-
-void RemoteView::keyEvent(QKeyEvent *)
-{
-}
-
-bool RemoteView::viewOnly()
-{
-    return m_viewOnly;
-}
-
-void RemoteView::setViewOnly(bool viewOnly)
-{
-    m_viewOnly = viewOnly;
-}
-
-bool RemoteView::grabAllKeys()
-{
-    return m_grabAllKeys;
-}
-
-void RemoteView::setGrabAllKeys(bool grabAllKeys)
-{
-    m_grabAllKeys = grabAllKeys;
-
-    if (grabAllKeys) {
-        m_keyboardIsGrabbed = true;
-        grabKeyboard();
-    } else if (m_keyboardIsGrabbed) {
-        releaseKeyboard();
-    }
-}
-
-QPixmap RemoteView::takeScreenshot()
-{
-    return grab();
-}
-
-void RemoteView::showDotCursor(DotCursorState state)
-{
-    m_dotCursorState = state;
-}
+void RemoteView::showDotCursor( DotCursorState state ) { m_dotCursorState = state; }
 
 RemoteView::DotCursorState RemoteView::dotCursorState() const
 {
-    return m_dotCursorState;
+	return m_dotCursorState;
 }
 
-bool RemoteView::scaling() const
-{
-    return m_scale;
-}
+bool RemoteView::scaling() const { return m_scale; }
 
-void RemoteView::enableScaling(bool scale)
-{
-    m_scale = scale;
-}
+void RemoteView::enableScaling( bool scale ) { m_scale = scale; }
 
-void RemoteView::switchFullscreen(bool)
-{
-}
+void RemoteView::switchFullscreen( bool ) {}
 
-void RemoteView::scaleResize(int, int)
-{
-}
+void RemoteView::scaleResize( int, int ) {}
 
-QUrl RemoteView::url()
-{
-    return m_url;
-}
+QUrl RemoteView::url() { return m_url; }
 
 #ifndef QTONLY
-QString RemoteView::readWalletPassword(bool fromUserNameOnly)
+QString RemoteView::readWalletPassword( bool fromUserNameOnly )
 {
-    return readWalletPasswordForKey(fromUserNameOnly ? m_url.userName() : m_url.toDisplayString(QUrl::StripTrailingSlash));
+	return readWalletPasswordForKey(
+		fromUserNameOnly ? m_url.userName()
+				 : m_url.toDisplayString( QUrl::StripTrailingSlash ) );
 }
 
-void RemoteView::saveWalletPassword(const QString &password, bool fromUserNameOnly)
+void RemoteView::saveWalletPassword( const QString &password, bool fromUserNameOnly )
 {
-    saveWalletPasswordForKey(fromUserNameOnly ? m_url.userName() : m_url.toDisplayString(QUrl::StripTrailingSlash), password);
+	saveWalletPasswordForKey(
+		fromUserNameOnly ? m_url.userName()
+				 : m_url.toDisplayString( QUrl::StripTrailingSlash ),
+		password );
 }
 
-QString RemoteView::readWalletPasswordForKey(const QString &key)
+QString RemoteView::readWalletPasswordForKey( const QString &key )
 {
-    const QString KRDCFOLDER = QLatin1String("KRDC");
+	const QString KRDCFOLDER = QLatin1String( "KRDC" );
 
-    window()->setDisabled(true); // WORKAROUND: disable inputs so users cannot close the current tab (see #181230)
-    m_wallet = KWallet::Wallet::openWallet(KWallet::Wallet::NetworkWallet(), window()->winId(), KWallet::Wallet::OpenType::Synchronous);
-    window()->setDisabled(false);
+	window()->setDisabled( true );	  // WORKAROUND: disable inputs so users cannot close the current tab (see #181230)
+	m_wallet = KWallet::Wallet::openWallet( KWallet::Wallet::NetworkWallet(),
+						window()->winId(),
+						KWallet::Wallet::OpenType::Synchronous );
+	window()->setDisabled( false );
 
-    if (m_wallet) {
-        bool walletOK = m_wallet->hasFolder(KRDCFOLDER);
-        if (!walletOK) {
-            walletOK = m_wallet->createFolder(KRDCFOLDER);
-            qCDebug(KRDC) << "Wallet folder created";
-        }
-        if (walletOK) {
-            qCDebug(KRDC) << "Wallet OK";
-            m_wallet->setFolder(KRDCFOLDER);
-            QString password;
+	if ( m_wallet )
+	{
+		bool walletOK = m_wallet->hasFolder( KRDCFOLDER );
+		if ( !walletOK )
+		{
+			walletOK = m_wallet->createFolder( KRDCFOLDER );
+			qCDebug( KRDC ) << "Wallet folder created";
+		}
+		if ( walletOK )
+		{
+			qCDebug( KRDC ) << "Wallet OK";
+			m_wallet->setFolder( KRDCFOLDER );
+			QString password;
 
-            if (m_wallet->hasEntry(key) &&
-                    !m_wallet->readPassword(key, password)) {
-                qCDebug(KRDC) << "Password read OK";
+			if ( m_wallet->hasEntry( key )
+			     && !m_wallet->readPassword( key, password ) )
+			{
+				qCDebug( KRDC ) << "Password read OK";
 
-                return password;
-            }
-        }
-    }
-    return QString();
+				return password;
+			}
+		}
+	}
+	return QString();
 }
 
-void RemoteView::saveWalletPasswordForKey(const QString &key, const QString &password)
+void RemoteView::saveWalletPasswordForKey( const QString &key, const QString &password )
 {
-    if (m_wallet && m_wallet->isOpen()) {
-        qCDebug(KRDC) << "Write wallet password";
-        m_wallet->writePassword(key, password);
-    }
+	if ( m_wallet && m_wallet->isOpen() )
+	{
+		qCDebug( KRDC ) << "Write wallet password";
+		m_wallet->writePassword( key, password );
+	}
 }
 #endif
 
 QCursor RemoteView::localDotCursor() const
 {
-    QString cursorBitmapPath = QStandardPaths::locate(QStandardPaths::DataLocation, QLatin1String("pics/pointcursor.png"));
-    QBitmap cursorBitmap = QBitmap();
-    cursorBitmap.load(cursorBitmapPath);
-    QString cursorMaskPath = QStandardPaths::locate(QStandardPaths::DataLocation, QLatin1String("pics/pointcursormask.png"));
-    QBitmap cursorMask = QBitmap();
-    cursorMask.load(cursorMaskPath);
-    return QCursor(cursorBitmap, cursorMask);
+	QString cursorBitmapPath =
+		QStandardPaths::locate( QStandardPaths::DataLocation,
+					QLatin1String( "pics/pointcursor.png" ) );
+	QBitmap cursorBitmap = QBitmap();
+	cursorBitmap.load( cursorBitmapPath );
+	QString cursorMaskPath = QStandardPaths::locate(
+		QStandardPaths::DataLocation,
+		QLatin1String( "pics/pointcursormask.png" ) );
+	QBitmap cursorMask = QBitmap();
+	cursorMask.load( cursorMaskPath );
+	return QCursor( cursorBitmap, cursorMask );
 }
 
-void RemoteView::focusInEvent(QFocusEvent *event)
+void RemoteView::focusInEvent( QFocusEvent *event )
 {
-    if (m_grabAllKeys) {
-        m_keyboardIsGrabbed = true;
-        grabKeyboard();
-    }
+	if ( m_grabAllKeys )
+	{
+		m_keyboardIsGrabbed = true;
+		grabKeyboard();
+	}
 
-    QWidget::focusInEvent(event);
+	QWidget::focusInEvent( event );
 }
 
-void RemoteView::focusOutEvent(QFocusEvent *event)
+void RemoteView::focusOutEvent( QFocusEvent *event )
 {
-    if (m_grabAllKeys || m_keyboardIsGrabbed) {
-        m_keyboardIsGrabbed = false;
-        releaseKeyboard();
-    }
+	if ( m_grabAllKeys || m_keyboardIsGrabbed )
+	{
+		m_keyboardIsGrabbed = false;
+		releaseKeyboard();
+	}
 
-    QWidget::focusOutEvent(event);
+	QWidget::focusOutEvent( event );
 }
 
-//#include "moc_remoteview.cpp"
+// #include "moc_remoteview.cpp"

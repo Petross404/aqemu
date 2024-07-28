@@ -25,23 +25,23 @@
 #define ABOUT_WINDOW_H
 
 #include <QtNetwork>
+
 #include "ui_About_Window.h"
 
 class About_Window: public QDialog
 {
 	Q_OBJECT
-	
-	public:
-		About_Window( QWidget *parent = 0 );
-		
-	private slots:
-		void Show_Links_File();
 
-	private:
-		Ui::About_Window ui;
+public:
+	About_Window( QWidget *parent = 0 );
 
-		QString linksFilePath;
+private slots:
+	void Show_Links_File();
 
+private:
+	Ui::About_Window ui;
+
+	QString linksFilePath;
 };
 
 #endif

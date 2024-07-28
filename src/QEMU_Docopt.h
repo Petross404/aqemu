@@ -25,7 +25,7 @@
 #include "docopt/docopt.h"
 
 static const char QEMU_USAGE[] =
-R"(QEMU emulator version 2.6.0 (qemu-2.6.0-1.fc24), Copyright (c) 2003-2008 Fabrice Bellard
+	R"(QEMU emulator version 2.6.0 (qemu-2.6.0-1.fc24), Copyright (c) 2003-2008 Fabrice Bellard
 usage: qemu-system-x86_64 [options]...
 
 'disk_image' is a raw hard disk image for IDE hard disk 0
@@ -451,4 +451,3 @@ When using -nographic, press 'ctrl-a h' to get some help.)";
 */
 
 void parse_qemu( int argc, char *argv[] );
-

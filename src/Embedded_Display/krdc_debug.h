@@ -3,5 +3,5 @@
 
 #include <QtDebug>
 
-#define qCDebug(KRDC) qDebug()
-#define qCritical(KRDC) qDebug()
+#define qCDebug( KRDC )	  qDebug()
+#define qCritical( KRDC ) qDebug()

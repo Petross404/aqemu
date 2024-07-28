@@ -20,30 +20,28 @@
 **
 ****************************************************************************/
 
-#include <QFileInfo>
-#include <QMessageBox>
-#include <QMenu>
-#include <QTimer>
-
-#include "Main_Window.h"
 #include "Inspect_QEMU_Arguments.h"
-#include "Add_New_Device_Window.h"
-#include "Utils.h"
-#include "Create_HDD_Image_Window.h"
-#include "System_Info.h"
+
+#include <QFileInfo>
+#include <QMenu>
+#include <QMessageBox>
+#include <QTimer>
 #include <iostream>
 
-Inspect_QEMU_Arguments::Inspect_QEMU_Arguments( Virtual_Machine* vm, QWidget *parent )
+#include "Add_New_Device_Window.h"
+#include "Create_HDD_Image_Window.h"
+#include "Main_Window.h"
+#include "System_Info.h"
+#include "Utils.h"
+
+Inspect_QEMU_Arguments::Inspect_QEMU_Arguments( Virtual_Machine* vm, QWidget* parent )
 	: QDialog( parent )
 {
 	ui.setupUi( this );
 
 	QString line = "";
-	
-    vm->Get_QEMU_Args();
+
+	vm->Get_QEMU_Args();
 }
 
-Inspect_QEMU_Arguments::~Inspect_QEMU_Arguments()
-{
-}
-
+Inspect_QEMU_Arguments::~Inspect_QEMU_Arguments() {}
