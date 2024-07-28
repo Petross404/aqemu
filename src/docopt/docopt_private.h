@@ -32,6 +32,7 @@ using boost::regex_constants::match_not_null;
 #endif
 
 #include "docopt_value.h"
+#include "docopt_util.h"
 
 namespace docopt {
 

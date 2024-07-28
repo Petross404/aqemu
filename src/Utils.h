@@ -24,12 +24,12 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#define CURRENT_AQEMU_VERSION	   "0.9.6"
 #define CURRENT_AQEMU_RELEASE_DATE "UNKNOWN"
 
 #include <QList>
 #include <QString>
 
+#include "Info.hpp"
 #include "VM_Devices.h"
 
 class Disable_User_Graphic_Warning

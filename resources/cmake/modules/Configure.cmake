@@ -14,11 +14,11 @@ function(handle_in_files NAME_OF_TARGET SRC_DIR)
 
     # Define the source .in files and their corresponding output files
     set(SOURCES
-
+        ${CMAKE_SOURCE_DIR}/src/Info.hpp.in
     )
 
     set(OUTPUTS
-
+        ${CMAKE_SOURCE_DIR}/src/Info.hpp
     )
 
     # Create configure_file commands for each source-output pair
@@ -29,6 +29,7 @@ function(handle_in_files NAME_OF_TARGET SRC_DIR)
         list(GET OUTPUTS ${i} OUT_FILE)
 
         # Configure the file: Generate the output file from the source .in file
+        message(STATUS ${SRC_FILE} ${OUT_FILE})
         configure_file(${SRC_FILE} ${OUT_FILE} @ONLY)
     endforeach()
 

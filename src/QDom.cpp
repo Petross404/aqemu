@@ -242,6 +242,7 @@ void QDomDocument::appendChild( const QDomElement& e )
 void QDomDocument::appendChild( const QDomProcessingInstruction& p )
 {
 	// TODO: stub
+	Q_UNUSED(p)
 }
 
 QDomElement QDomDocument::documentElement()
@@ -286,6 +287,7 @@ QDomProcessingInstruction QDomDocument::createProcessingInstruction( const QStri
 
 bool QDomDocument::setContent( QFile* file, bool b, QString* s, int* i, int* i2 )
 {
+	Q_UNUSED(b);
 	if ( document )
 	{
 		XMLError err = document->LoadFile( file->fileName().toUtf8() );

@@ -5,29 +5,58 @@
 # Timothy Redaelli (Fix for build in a different folder)
 # Tobias Gläßer (Qt5 port)
 
-PROJECT( AQEMU CXX )
-CMAKE_MINIMUM_REQUIRED( VERSION 3.1.0 FATAL_ERROR )
+cmake_minimum_required( VERSION 3.10.0 FATAL_ERROR )
+
+project( AQEMU
+	VERSION 0.9.6.9999
+	DESCRIPTION "A Qt GUI for virtual machines using QEMU as the backend"
+	HOMEPAGE_URL "https://github.com/tobimensch/aqemu"
+	LANGUAGES CXX )
+
+# Print project details
+message(STATUS "Project: ${PROJECT_NAME} ${PROJECT_VERSION}")
+message(STATUS "Description: ${PROJECT_DESCRIPTION}")
+message(STATUS "Homepage: ${PROJECT_HOMEPAGE_URL}")
+message(STATUS "Author: ${PROJECT_AUTHOR}")
+message(STATUS "License: ${PROJECT_LICENSE}")
+
+# Set the C++ standard to C++23 and ensure it's required.
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Available options
-OPTION( DEBUG "Build with debug information" )
-OPTION( WITHOUT_EMBEDDED_DISPLAY "Build without support Embedded VNC Display" )
-OPTION( UPDATE_TRANSLATIONS "Update source translation files (WARNING: make clean will delete the source .ts files!)" )
-OPTION( INSTALL_MAN "Install MAN page file" "ON" )
+option( DEBUG "Build with debug information" )
+option( WITHOUT_EMBEDDED_DISPLAY "Build without support Embedded VNC Display" )
+option( UPDATE_TRANSLATIONS "Update source translation files (WARNING: make clean will delete the source .ts files!)" )
+option( INSTALL_MAN "Install MAN page file" "ON" )
 
 # Debug mode
-IF( DEBUG )
+if( DEBUG )
 	# Verbose compiler output
-	SET( CMAKE_VERBOSE_MAKEFILE ON )
-	
-	# GCC
-	ADD_DEFINITIONS( -Wall -g )
-ENDIF( DEBUG )
+	set( CMAKE_VERBOSE_MAKEfile ON )
 
-# For finding VNC libs
-SET( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/resources/cmake/modules )
+	# GCC
+	add_definitions( -Wall -g )
+endif( DEBUG )
+
+# Include necessary CMake modules
+include(GNUInstallDirs)
+include(FindDoxygen)
+include(FindGSL)
+include(CMakeParseArguments)
+
+# For finding VNC libs - and other cmake functionality
+set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/resources/cmake/modules )
+
+# Include custom CMake scripts
+include("${CMAKE_MODULE_PATH}/Sanitizers.cmake")
+include("${CMAKE_MODULE_PATH}/ClangFormat.cmake")
+#include("${CMAKE_MODULE_PATH}/ClangTidy.cmake")
+include("${CMAKE_MODULE_PATH}/Configure.cmake")
+include("${CMAKE_MODULE_PATH}/BuildDoc.cmake")
 
 # Files
-SET( aqemu_headers
+set( aqemu_headers
     src/No_Boot_Device.h
     src/Highlighted_Label.h
     src/Service.h
@@ -77,7 +106,7 @@ SET( aqemu_headers
 	src/VNC_Password_Window.h
 )
 
-SET( aqemu_sources
+set( aqemu_sources
     src/No_Boot_Device.cpp
     src/Highlighted_Label.cpp
     src/Service.cpp
@@ -128,7 +157,7 @@ SET( aqemu_sources
 	src/VNC_Password_Window.cpp
 )
 
-SET( aqemu_ui
+set( aqemu_ui
     src/No_Boot_Device.ui
 	src/About_Window.ui
 	src/Add_New_Device_Window.ui
@@ -164,172 +193,218 @@ SET( aqemu_ui
 	src/VNC_Password_Window.ui
 )
 
-SET( aqemu_qrc 
+set( aqemu_qrc
     resources/shared_images.qrc
     resources/icons.qrc
 )
 
-SET( aqemu_man_page
+set( aqemu_man_page
     resources/docs/aqemu.1 )
 
-SET( translations 
+set( translations
      translations/German.ts
      transtations/Russian.ts
      translations/Ukrainian.ts
      translations/French.ts
      translations/English.ts )
 
-SET( files_to_translate ${files_to_translate} ${aqemu_headers} ${aqemu_sources} ${aqemu_ui} )
+set( files_to_translate ${files_to_translate} ${aqemu_headers} ${aqemu_sources} ${aqemu_ui} )
 
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # Instruct CMake to run moc automatically when needed.
 set(CMAKE_AUTOMOC ON)
 # Instruct CMake to run uic automatically when needed.
-SET(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOUIC ON)
 # Instruct CMake to run rcc automatically when needed.
-SET(CMAKE_AUTORCC ON)
+set(CMAKE_AUTORCC ON)
+
+# Optionally handle documentation generation
+option(BUILD_DOC "Build documentation with Doxygen." OFF)
+if(BUILD_DOC)
+	add_subdirectory(Documentation)
+endif()
+
+# Options to configure sanitizers
+option(ENABLE_ASAN "Build with AddressSanitizer (ASan)." OFF)
+option(ENABLE_LSAN "Build with LeakSanitizer (LSan)." OFF)
+option(ENABLE_MSAN "Build with MemorySanitizer (MSan)." OFF)
+
+# Add a custom command for the 'all' target to ensure that the compile_commands.json file is generated.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Check Qt
-FIND_PACKAGE( Qt5Core )
-FIND_PACKAGE( Qt5Widgets )
-FIND_PACKAGE( Qt5Network )
-FIND_PACKAGE( Qt5Test )
-FIND_PACKAGE( Qt5PrintSupport )
-FIND_PACKAGE( Qt5DBus )
+find_package(Qt5 COMPONENTS Core Widgets Network Test PrintSupport DBus REQUIRED)
 
 # Embedded VNC display
-IF( NOT WITHOUT_EMBEDDED_DISPLAY )
-	FIND_PACKAGE( LibVNCServer REQUIRED )
-	
-	SET( aqemu_headers ${aqemu_headers} src/Embedded_Display/Machine_View.h src/Embedded_Display/remoteview.h
+if( NOT WITHOUT_EMBEDDED_DISPLAY )
+	find_package( LibVNCServer REQUIRED )
+
+	set( aqemu_headers ${aqemu_headers} src/Embedded_Display/Machine_View.h src/Embedded_Display/remoteview.h
 										src/Embedded_Display/vncclientthread.h src/Embedded_Display/vncview.h )
-	
-	SET( aqemu_sources ${aqemu_sources} src/Embedded_Display/Machine_View.cpp src/Embedded_Display/remoteview.cpp
+
+	set( aqemu_sources ${aqemu_sources} src/Embedded_Display/Machine_View.cpp src/Embedded_Display/remoteview.cpp
 										src/Embedded_Display/vncclientthread.cpp src/Embedded_Display/vncview.cpp )
-	
-	ADD_DEFINITIONS( -DVNC_DISPLAY -DQTONLY )
-ENDIF( NOT WITHOUT_EMBEDDED_DISPLAY )
+
+	add_definitions( -DVNC_DISPLAY -DQTONLY )
+endif( NOT WITHOUT_EMBEDDED_DISPLAY )
 
 # TODO: port from Qt4 to Qt5
 # For translation
-#IF( UPDATE_TRANSLATIONS )
+#if( UPDATE_TRANSLATIONS )
 #	QT5_CREATE_TRANSLATION( qm_files ${CMAKE_CURRENT_SOURCE_DIR} ${files_to_translate} ${translations} )
 #ELSE( UPDATE_TRANSLATIONS )
 #	QT5_ADD_TRANSLATION( qm_files ${translations} )
-#ENDIF( UPDATE_TRANSLATIONS )
+#endif( UPDATE_TRANSLATIONS )
 
-ADD_CUSTOM_TARGET( translations_target DEPENDS ${qm_files} )
+add_custom_target( translations_target DEPENDS ${qm_files} )
 
-IF( COMMAND CMAKE_POLICY )
-	CMAKE_POLICY( SET CMP0003 NEW )
-ENDIF( COMMAND CMAKE_POLICY )
+if(COMMAND cmake_policy)
+    cmake_policy(SET CMP0003 NEW)
+endif()
 
 ADD_EXECUTABLE( aqemu
 	${aqemu_sources}
 	${ui_headers}
 	${moc_srcs}
 	${qm_files}
-    ${aqemu_qrc}
+	${aqemu_qrc}
 )
+
+# Handle custom scripts
+handle_in_files(aqemu ${CMAKE_SOURCE_DIR})
+
+# Configure sanitizers
+handle_sanitizers(aqemu ${ENABLE_ASAN} ${ENABLE_LSAN} ${ENABLE_MSAN})
+
+# Optionally enable additional warnings and compiler flags.
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	target_compile_options(aqemu PRIVATE -Wall -Wextra -Wpedantic -Werror -Wl,--verbose,-t)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	target_compile_options(aqemu PRIVATE -Wall -Wextra -Wpedantic -Werror)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_compile_options(aqemu PRIVATE /W4 /WX)
+endif()
 
 target_include_directories(aqemu PUBLIC src/ )
 
 # Require C++-11 standard
-SET_PROPERTY(TARGET aqemu PROPERTY CXX_STANDARD 11)
-SET_PROPERTY(TARGET aqemu PROPERTY CXX_STANDARD_REQUIRED ON)
+# set_property(TARGET aqemu PROPERTY CXX_STANDARD 11)
+# set_property(TARGET aqemu PROPERTY CXX_STANDARD_REQUIRED ON)
 
-TARGET_LINK_LIBRARIES( aqemu
+target_link_libraries(aqemu
 	Qt5::Widgets
-    Qt5::Network
-    Qt5::Test
-    Qt5::PrintSupport
-    Qt5::DBus
+	Qt5::Network
+	Qt5::Test
+	Qt5::PrintSupport
+	Qt5::DBus
 )
 
 # Embedded VNC display
-IF( NOT WITHOUT_EMBEDDED_DISPLAY )
-	TARGET_LINK_LIBRARIES( aqemu ${LIBVNCCLIENT_LIBRARIES} )
-ENDIF( NOT WITHOUT_EMBEDDED_DISPLAY )
+if( NOT WITHOUT_EMBEDDED_DISPLAY )
+	target_link_libraries( aqemu ${LIBVNCCLIENT_LIBRARIES} )
+endif( NOT WITHOUT_EMBEDDED_DISPLAY )
 
 # Install files
-INSTALL( TARGETS aqemu DESTINATION bin )
+install( TARGETS aqemu
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
-INSTALL( FILES ${qm_files} DESTINATION share/aqemu )
+# Install data files and directories
+install(
+    FILES
+        ${qm_files}
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/docs/links.html
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/menu_data/aqemu.desktop
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/menu_data/aqemu.appdata.xml
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/menu_data/*.png
+    DESTINATION
+        ${CMAKE_INSTALL_DATADIR}/aqemu
+)
 
-FILE( GLOB os_icons "${CMAKE_CURRENT_SOURCE_DIR}/resources/os_icons/*.*" )
-INSTALL( FILES ${os_icons} DESTINATION share/aqemu/os_icons )
+# Install directories
+install(
+    DIRECTORY
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/os_icons/
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/os_templates/
+    DESTINATION
+        ${CMAKE_INSTALL_DATADIR}/aqemu
+)
 
-FILE( GLOB os_templates "${CMAKE_CURRENT_SOURCE_DIR}/resources/os_templates/*.*")
-INSTALL( FILES ${os_templates} DESTINATION share/aqemu/os_templates )
+#install( FILES ${qm_files} DESTINATION share/aqemu )
 
-FILE( GLOB links "${CMAKE_CURRENT_SOURCE_DIR}/resources/docs/links.html" )
-INSTALL( FILES ${links} DESTINATION share/aqemu/docs )
-
-FILE( GLOB pixmaps "${CMAKE_CURRENT_SOURCE_DIR}/resources/menu_data/*.png" )
-INSTALL( FILES ${pixmaps} DESTINATION share/pixmaps )
-
-FILE( GLOB app_menu "${CMAKE_CURRENT_SOURCE_DIR}/resources/menu_data/aqemu.desktop" )
-INSTALL( FILES ${app_menu} DESTINATION share/applications )
-
-FILE( GLOB app_menu "${CMAKE_CURRENT_SOURCE_DIR}/resources/menu_data/aqemu.appdata.xml" )
-INSTALL( FILES ${app_menu} DESTINATION share/appdata )
+# file( GLOB os_icons "${CMAKE_CURRENT_SOURCE_DIR}/resources/os_icons/*.*" )
+# install( files ${os_icons} DESTINATION share/aqemu/os_icons )
+#
+# file( GLOB os_templates "${CMAKE_CURRENT_SOURCE_DIR}/resources/os_templates/*.*")
+# install( files ${os_templates} DESTINATION share/aqemu/os_templates )
+#
+# file( GLOB links "${CMAKE_CURRENT_SOURCE_DIR}/resources/docs/links.html" )
+# install( files ${links} DESTINATION share/aqemu/docs )
+#
+# file( GLOB pixmaps "${CMAKE_CURRENT_SOURCE_DIR}/resources/menu_data/*.png" )
+# install( files ${pixmaps} DESTINATION share/pixmaps )
+#
+# file( GLOB app_menu "${CMAKE_CURRENT_SOURCE_DIR}/resources/menu_data/aqemu.desktop" )
+# install( files ${app_menu} DESTINATION share/applications )
+#
+# file( GLOB app_menu "${CMAKE_CURRENT_SOURCE_DIR}/resources/menu_data/aqemu.appdata.xml" )
+# install( files ${app_menu} DESTINATION share/appdata )
 
 # Create docs .bz2 files
-MACRO( create_docs _sources )
-	FOREACH( curFile ${ARGN} )
-		GET_FILENAME_COMPONENT( _in ${curFile} ABSOLUTE )
-		GET_FILENAME_COMPONENT( _basename ${curFile} NAME_WE )
-		
-		SET( _out ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.bz2 )
-		
-		ADD_CUSTOM_COMMAND( OUTPUT ${_out} COMMAND bzip2 ARGS -zkf9 ${_in} DEPENDS ${_in} )
-		
-		SET( ${_sources} ${${_sources}} ${_out} )
-	ENDFOREACH( curFile )
-ENDMACRO( create_docs )
+macro( create_docs _sources )
+	foreach( curFile ${ARGN} )
+		get_filename_component( _in ${curFile} ABSOLUTE )
+		get_filename_component( _basename ${curFile} NAME_WE )
+
+		set( _out ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.bz2 )
+
+		add_custom_command( OUTPUT ${_out} COMMAND bzip2 ARGS -zkf9 ${_in} DEPENDS ${_in} )
+
+		set( ${_sources} ${${_sources}} ${_out} )
+	endforeach( curFile )
+endmacro( create_docs )
 
 CREATE_DOCS( docs_bz2 AUTHORS CHANGELOG README TODO )
-ADD_CUSTOM_TARGET( docs ALL DEPENDS ${docs_bz2} )
-INSTALL( FILES ${docs_bz2} DESTINATION share/doc/aqemu )
+add_custom_target( docs ALL DEPENDS ${docs_bz2} )
+install( FILES ${docs_bz2} DESTINATION ${CMAKE_INSTALL_DOCDIR}/aqemu )
 
 # Compress and install MAN page file
-IF( NOT MAN_PAGE_COMPRESSOR )
-	MESSAGE( STATUS "MAN page will be installed is not packed." )
-ELSEIF( MAN_PAGE_COMPRESSOR STREQUAL "gzip" )
-	SET( COMPRESSOR_SUFFIX gz )
-ELSEIF( MAN_PAGE_COMPRESSOR STREQUAL "bzip2" )
-	SET( COMPRESSOR_SUFFIX bz2 )
-ELSEIF( MAN_PAGE_COMPRESSOR STREQUAL "lzma" )
-	SET( COMPRESSOR_SUFFIX lzma )
-ELSE( NOT MAN_PAGE_COMPRESSOR )
-	MESSAGE( STATUS "${MAN_PAGE_COMPRESSOR} not supported!" )
-	MESSAGE( FATAL_ERROR "Correct values: gzip, bzip2, lzma" )
-ENDIF( NOT MAN_PAGE_COMPRESSOR )
+if( NOT MAN_PAGE_COMPRESSOR )
+	message( STATUS "MAN page will be installed is not packed." )
+elseif( MAN_PAGE_COMPRESSOR STREQUAL "gzip" )
+	set( COMPRESSOR_SUFFIX gz )
+elseif( MAN_PAGE_COMPRESSOR STREQUAL "bzip2" )
+	set( COMPRESSOR_SUFFIX bz2 )
+elseif( MAN_PAGE_COMPRESSOR STREQUAL "lzma" )
+	set( COMPRESSOR_SUFFIX lzma )
+else( NOT MAN_PAGE_COMPRESSOR )
+	message( STATUS "${MAN_PAGE_COMPRESSOR} not supported!" )
+	message( FATAL_ERROR "Correct values: gzip, bzip2, lzma" )
+endif( NOT MAN_PAGE_COMPRESSOR )
 
 # Compress MAN file?
-IF( INSTALL_MAN )
-	IF( COMPRESSOR_SUFFIX )
+if( INSTALL_MAN )
+	if( COMPRESSOR_SUFFIX )
 		# Find gzip, bzip or lzma
-		FIND_PROGRAM( COMPRESSOR_BIN NAMES ${MAN_PAGE_COMPRESSOR} )
-		
-		IF( ${COMPRESSOR_BIN} MATCHES COMPRESSOR_BIN-NOTFOUND )
-			MESSAGE( STATUS "${MAN_PAGE_COMPRESSOR} - NOT FOUND!" )
-			MESSAGE( FATAL_ERROR "Please install ${MAN_PAGE_COMPRESSOR} package!" )
-		ENDIF( ${COMPRESSOR_BIN} MATCHES COMPRESSOR_BIN-NOTFOUND )
-		
+		find_program( COMPRESSOR_BIN NAMES ${MAN_PAGE_COMPRESSOR} )
+
+		if( ${COMPRESSOR_BIN} MATCHES COMPRESSOR_BIN-NOTFOUND )
+			message( STATUS "${MAN_PAGE_COMPRESSOR} - NOT FOUND!" )
+			message( FATAL_ERROR "Please install ${MAN_PAGE_COMPRESSOR} package!" )
+		endif( ${COMPRESSOR_BIN} MATCHES COMPRESSOR_BIN-NOTFOUND )
+
 		# Compress
-		EXECUTE_PROCESS( OUTPUT_FILE ${aqemu_man_page}.${COMPRESSOR_SUFFIX}
+		execute_process( OUTPUT_FILE ${aqemu_man_page}.${COMPRESSOR_SUFFIX}
 						COMMAND "${COMPRESSOR_BIN}" -9
 						INPUT_FILE ${aqemu_man_page}
 						WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} )
-		
+
 		# Install MAN
-		INSTALL( FILES ${CMAKE_SOURCE_DIR}/${aqemu_man_page}.${COMPRESSOR_SUFFIX} DESTINATION share/man/man1 )
-	ELSE( COMPRESSOR_SUFFIX )
-		MESSAGE( STATUS "MAN_PAGE_COMPRESSOR flag not set. Available values: gzip, bzip2, lzma" )
-		MESSAGE( STATUS "Will be installed not compressed MAN pages" )
-		
-		INSTALL( FILES ${CMAKE_SOURCE_DIR}/${aqemu_man_page} DESTINATION share/man/man1 )
-	ENDIF( COMPRESSOR_SUFFIX )
-ENDIF( INSTALL_MAN )
+		install( FILES ${CMAKE_SOURCE_DIR}/${aqemu_man_page}.${COMPRESSOR_SUFFIX} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 )
+	else( COMPRESSOR_SUFFIX )
+		message( STATUS "MAN_PAGE_COMPRESSOR flag not set. Available values: gzip, bzip2, lzma" )
+		message( STATUS "Will be installed not compressed MAN pages" )
+
+		install( FILES ${CMAKE_SOURCE_DIR}/${aqemu_man_page} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 )
+	endif( COMPRESSOR_SUFFIX )
+endif( INSTALL_MAN )
