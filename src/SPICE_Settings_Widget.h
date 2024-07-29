@@ -23,8 +23,14 @@
 #ifndef SPICE_SETTINGS_WIDGET_H
 #define SPICE_SETTINGS_WIDGET_H
 
+#include <QWidget>
+#include <memory>
+
 #include "VM_Devices.h"
-#include "ui_SPICE_Settings_Widget.h"
+
+namespace Ui {
+class SPICE_Settings_Widget;
+};
 
 class SPICE_Settings_Widget: public QWidget
 {
@@ -49,7 +55,7 @@ signals:
 private:
 	void Show_Renderer_List( const QList<VM::SPICE_Renderer> &list );
 
-	Ui::SPICE_Settings_Widget ui;
+	std::unique_ptr<Ui::SPICE_Settings_Widget> ui;
 
 	VM_SPICE spiceSettings;
 };

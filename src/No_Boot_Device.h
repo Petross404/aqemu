@@ -23,8 +23,12 @@
 #ifndef NO_BOOT_DEVICE_H
 #define NO_BOOT_DEVICE_H
 
+#inclue < memory>
 #include "VM.h"
-#include "ui_No_Boot_Device.h"
+
+namespace Ui {
+class No_Boot_Device;
+};
 
 class No_Boot_Device: public QDialog
 {
@@ -43,7 +47,7 @@ private slots:
 	void Computer_Port();
 
 private:
-	Ui::No_Boot_Device ui;
+	std::unique_ptr<Ui::No_Boot_Device> ui;
 };
 
 #endif

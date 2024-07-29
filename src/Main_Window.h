@@ -21,11 +21,14 @@
 **
 ****************************************************************************/
 
+class Settings_Widget;
 #ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
 
 #include <QCloseEvent>
 #include <QList>
+#include <QMainWindow>
+#include <memory>
 
 #include "Add_New_Device_Window.h"
 #include "HDD_Image_Info.h"
@@ -36,16 +39,19 @@
 #include "System_Info.h"
 #include "Utils.h"
 #include "VM.h"
-#include "ui_Advanced_Options.h"
-#include "ui_Architecture_Options.h"
-#include "ui_KVM_Options.h"
-#include "ui_Main_Window.h"
 
 class Ports_Tab_Widget;
 class Device_Manager_Widget;
 class Folder_Sharing_Widget;
 class Network_Card_Widget;
 class Block_VM_Changed_Signals;
+
+namespace Ui {
+class Main_Window;
+class Advanced_Options;
+class Architecture_Options;
+class KVM_Options;
+};    // namespace Ui
 
 class Main_Window: public QMainWindow
 {
@@ -238,10 +244,10 @@ private:
 				const QString		&fd_name,
 				const VM_Storage_Device &fd );
 
-	Ui::Main_Window		 ui;
-	Ui::Advanced_Options	 ui_ao;
-	Ui::KVM_Options		 ui_kvm;
-	Ui::Architecture_Options ui_arch;
+	std::unique_ptr<Ui::Main_Window>	  ui;
+	std::unique_ptr<Ui::Advanced_Options>	  ui_ao;
+	std::unique_ptr<Ui::KVM_Options>	  ui_kvm;
+	std::unique_ptr<Ui::Architecture_Options> ui_arch;
 
 	QDialog		*Advanced_Options;
 	QDialog		*Accelerator_Options;

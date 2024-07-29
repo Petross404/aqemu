@@ -19,8 +19,9 @@
 ** Boston, MA  02110-1301, USA.
 **
 ****************************************************************************/
-
 #include "No_Boot_Device.h"
+
+#include <ui_Main_Window.h>
 
 #include <QFileInfo>
 #include <QMenu>
@@ -33,36 +34,38 @@
 #include "Main_Window.h"
 #include "System_Info.h"
 #include "Utils.h"
+#include "ui_No_Boot_Device.h"
 
 No_Boot_Device::No_Boot_Device( QWidget *parent )
-	: QDialog( parent )
+	: QDialog{ parent }
+	, ui{ std::make_unique<Ui::No_Boot_Device>() }
 {
-	ui.setupUi( this );
+	ui->setupUi( this );
 
-	connect( ui.boot_order_button, SIGNAL( clicked() ), this, SLOT( Change_Boot_Order() ) );
-	connect( ui.device_manager_button, SIGNAL( clicked() ), this, SLOT( Device_Manager() ) );
-	connect( ui.special_image_boot_button,
+	connect( ui->boot_order_button, SIGNAL( clicked() ), this, SLOT( Change_Boot_Order() ) );
+	connect( ui->device_manager_button, SIGNAL( clicked() ), this, SLOT( Device_Manager() ) );
+	connect( ui->special_image_boot_button,
 		 SIGNAL( clicked() ),
 		 this,
 		 SLOT( Special_Image() ) );
-	connect( ui.computer_port_button, SIGNAL( clicked() ), this, SLOT( Computer_Port() ) );
-	connect( ui.kernel_boot_button, SIGNAL( clicked() ), this, SLOT( Kernel_Boot() ) );
+	connect( ui->computer_port_button, SIGNAL( clicked() ), this, SLOT( Computer_Port() ) );
+	connect( ui->kernel_boot_button, SIGNAL( clicked() ), this, SLOT( Kernel_Boot() ) );
 
 	auto mw = static_cast<Main_Window *>( parent );
-	ui.boot_order_button->setDescription(
-		tr( "Current order:" ) + " " + mw->ui.CB_Boot_Priority->currentText() );
+	ui->boot_order_button->setDescription(
+		tr( "Current order:" ) + " " + mw->ui->CB_Boot_Priority->currentText() );
 }
 
-No_Boot_Device::~No_Boot_Device() {}
+No_Boot_Device::~No_Boot_Device() = default;
 
 void No_Boot_Device::Set_VM( const Virtual_Machine &vm ) {}
 
 void No_Boot_Device::Change_Boot_Order()
 {
 	auto mw = static_cast<Main_Window *>( parent() );
-	mw->ui.Tabs->setCurrentIndex( 1 );
+	mw->ui->Tabs->setCurrentIndex( 1 );
 
-	QTimer::singleShot( 50, mw, SLOT( on_TB_Show_Boot_Settings_Window_clicked() ) );
+	QTimer::singleShot( 50, mw, &Main_Window::on_TB_Show_Boot_Settings_Window_clicked );
 
 	accept();
 }
@@ -70,7 +73,7 @@ void No_Boot_Device::Change_Boot_Order()
 void No_Boot_Device::Device_Manager()
 {
 	auto mw = static_cast<Main_Window *>( parent() );
-	mw->ui.Tabs->setCurrentIndex( 2 );
+	mw->ui->Tabs->setCurrentIndex( 2 );
 	mw->Media_Settings_Widget->setCurrentIndex( 0 );
 	accept();
 }
@@ -78,7 +81,7 @@ void No_Boot_Device::Device_Manager()
 void No_Boot_Device::Special_Image()
 {
 	auto mw = static_cast<Main_Window *>( parent() );
-	mw->ui.Tabs->setCurrentIndex( 2 );
+	mw->ui->Tabs->setCurrentIndex( 2 );
 	mw->Media_Settings_Widget->setCurrentIndex( 4 );
 	accept();
 }
@@ -86,7 +89,7 @@ void No_Boot_Device::Special_Image()
 void No_Boot_Device::Computer_Port()
 {
 	auto mw = static_cast<Main_Window *>( parent() );
-	mw->ui.Tabs->setCurrentIndex( 2 );
+	mw->ui->Tabs->setCurrentIndex( 2 );
 	mw->Media_Settings_Widget->setCurrentIndex( 2 );
 	accept();
 }
@@ -94,7 +97,7 @@ void No_Boot_Device::Computer_Port()
 void No_Boot_Device::Kernel_Boot()
 {
 	auto mw = static_cast<Main_Window *>( parent() );
-	mw->ui.Tabs->setCurrentIndex( 2 );
+	mw->ui->Tabs->setCurrentIndex( 2 );
 	mw->Media_Settings_Widget->setCurrentIndex( 3 );
 	accept();
 }

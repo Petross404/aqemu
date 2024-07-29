@@ -627,6 +627,8 @@ public:
 	bool Get_Discard() const;
 	void Set_Discard( bool discard );
 
+	VM_Native_Storage_Device &operator=( const VM_Native_Storage_Device &other ) = default;
+
 private:
 	bool	UFile_Path;
 	QString File_Path;

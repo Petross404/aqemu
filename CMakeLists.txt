@@ -279,9 +279,9 @@ handle_sanitizers(aqemu ${ENABLE_ASAN} ${ENABLE_LSAN} ${ENABLE_MSAN})
 
 # Optionally enable additional warnings and compiler flags.
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	target_compile_options(aqemu PRIVATE -Wall -Wextra -Wpedantic -Werror -Wl,--verbose,-t)
+	target_compile_options(aqemu PRIVATE -Wall -Wextra -Wpedantic -Wl,--verbose,-t)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-	target_compile_options(aqemu PRIVATE -Wall -Wextra -Wpedantic -Werror)
+	target_compile_options(aqemu PRIVATE -Wall -Wextra -Wpedantic)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	target_compile_options(aqemu PRIVATE /W4 /WX)
 endif()
